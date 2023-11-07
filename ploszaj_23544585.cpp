@@ -43,5 +43,31 @@ int main (int argc, chat *argv[]){
         write(pipe_time[1], &start, sizeof(start));
         close(pipe_time[1]); //close write end, done with pipe
 
+        //execute the command
+        execlp(command, command, (char *)NULL);
+        cout << "Error executing command";
+        return 4;
+    } else { //parent process
+        close(pipe_cmd[0]);
+        close(pipe_time[1]);
+
+        //write command to pipe
+        write(pipe_cmd[1], argv[1], strlen(argv[1] + 1));
+        close(pipe_cmd[1]); //close write end of pipe
+
+        waitpid(pid, NULL, 0); //wait for child to finish
+
+        gettimeofday(&end, NULL); //get the end timestamp
+
+        read(pipe_time[0], &start, sizeof(start));
+        close(pipe_time[0]); //close read end of pipe
+
+        //calculate and print the elapsed time
+        long seconds = end.tv_sec - start.tv_sec;
+        long microseconds = end.tv_usec - start.tv_usec;
+
+        cout << "Elapsed time: " << seconds << "." << microseconds << "seconds" << endl;
     }
+
+    return 0;
 }
